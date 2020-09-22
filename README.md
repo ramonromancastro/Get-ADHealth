@@ -11,3 +11,4 @@ $SmtpTo = "reports@example.com"
 $SmtpSubject = "[Active Directory] Comprobacion del estado del Directorio Activo" 
 
 Send-MailMessage -SmtpServer $SmtpServer -From $SmtpFrom -To $SmtpTo -Subject $SmtpSubject -Body (Get-Content $HtmlFile | Out-String) -BodyAsHtml
+```
