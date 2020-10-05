@@ -1176,11 +1176,6 @@ If ($HtmlFile){
 	
 	$Position = 0
 
-	$Summary = @{}
-	$FilterResults | ForEach-Object{
-		$Summary[$_.State]++;
-	}
-
 	# HTML header
 	
 	Clear-Content $HtmlFile 
@@ -1212,12 +1207,25 @@ If ($HtmlFile){
 	Add-Content $HtmlFile "<h2>Comprobaciones realizadas: $($Tests -join ', ')</h2>"
 	Add-Content $HtmlFile "<h2>Filtros aplicados: $($Filters -join ', ')</h2>"
 	Add-Content $HtmlFile "<div class='w3-row-padding w3-stretch'>"
-	If ($Summary['Failed'] -gt 0){
-		Add-Content $HtmlFile "<div class='w3-col l2 m6 s12 w3-section'><div class='w3-card w3-red w3-padding-large w3-center'><span class='w3-xlarge'>$($Summary['Failed'])</span><br/>Failed</div></div>"
+	
+	$Summary = @{}
+
+	$Summary['Failed'] = @()
+	$Summary['Timeout'] = @()
+	$Summary['Completed'] = @()
+	
+	$FilterResults | ForEach-Object{
+		$Summary[$_.State] += $_.TestName;
 	}
-	If ($Summary['Timeout'] -gt 0){
-		Add-Content $HtmlFile "<div class='w3-col l2 m6 s12 w3-section'><div class='w3-card w3-yellow w3-padding-large w3-center'><span class='w3-xlarge'>$($Summary['Timeout'])</span><br/>Timeout</div></div>"
+	
+	$Summary['Failed'] | Sort-Object -Unique | ForEach-Object{
+		Add-Content $HtmlFile "<div class='w3-col l2 m6 s12 w3-section'><div class='w3-card w3-red w3-padding-large w3-center' style='word-wrap:break-word;'><span class='w3-xlarge'>$($_)</span><br/>Failed</div></div>"
 	}
+	
+	$Summary['Timeout'] | Sort-Object -Unique | ForEach-Object{
+		Add-Content $HtmlFile "<div class='w3-col l2 m6 s12 w3-section'><div class='w3-card w3-yellow w3-padding-large w3-center' style='word-wrap:break-word;'><span class='w3-xlarge'>$($_)</span><br/>Timeout</div></div>"
+	}
+	
 	Add-Content $HtmlFile "</div>"
 
 	# HTML table
