@@ -34,7 +34,7 @@
 .COMPONENT
 	ActiveDirectory Module
 .NOTES
-	Versión:    0.6
+	Versión:    0.7
 	Autor:		Ramón Román Castro
 	Basado en:	https://gist.github.com/AlexAsplund/28f6c3ef42418902885cde1b83ebc260 (Alex Asplund)
 .LINK
@@ -378,7 +378,7 @@ Function Test-AdhcDCDiag {
 			$Output = $Null
 			$State = $Null
             
-            if($_ -in @("DcPromo", "RegisterInDNS")){
+            if($_ -in @("DcPromo", "DNS", "RegisterInDNS")){
                 if($env:COMPUTERNAME -ne $ComputerName){
 
                     Write-Verbose "Test cannot be performed remote, invoking dcdiag"
