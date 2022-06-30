@@ -34,7 +34,7 @@
 .COMPONENT
 	ActiveDirectory Module
 .NOTES
-	Versión:    0.8
+	Versión:    0.9
 	Autor:		Ramón Román Castro
 	Basado en:	https://gist.github.com/AlexAsplund/28f6c3ef42418902885cde1b83ebc260 (Alex Asplund)
 .LINK
@@ -1073,6 +1073,7 @@ If ("UnlinkedGPO" -in $Tests -Or $Tests -eq "All"){
 If ("OrphanGPO" -in $Tests -Or $Tests -eq "All"){
 	Write-Verbose "Starting test unused GPOs on domain"
 	
+	
 	$DNSRoot = (Get-ADDomain | Select-Object -ExpandProperty DNSRoot)
 	$Path = "\\$($DNSRoot)\SYSVOL\$($DNSRoot)\Policies\"
 	$GPOs = Get-ChildItem $Path -Directory | Where-Object { $_.Name -ne "PolicyDefinitions"} | Select-Object -ExpandProperty Name
@@ -1080,13 +1081,11 @@ If ("OrphanGPO" -in $Tests -Or $Tests -eq "All"){
 	$OrphanGPOs = @()
 	ForEach($GPO in $GPOs){
 		Try{
-			[System.Guid]::Parse($GPO) | Out-Null
-			If ((Get-GPO -Guid $GPO -ErrorAction SilentlyContinue) -eq $null) { $OrphanGPOs += $GPO}
+			If ((Get-GPO -Guid $GPO -ErrorAction SilentlyContinue) -eq $null) { $OrphanGPOs += $GPO }
 		}
-		Catch{
-			$OrphanGPOs += $GPO
-		}
+		Catch{}
 	}
+	
 	$OrphanGPOCount = ($OrphanGPOs | Measure-Object).Count
 	If ($OrphanGPOCount -eq 0) { $State = "Completed" }
 	Else { $State = "Failed" }
