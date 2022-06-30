@@ -34,7 +34,7 @@
 .COMPONENT
 	ActiveDirectory Module
 .NOTES
-	Versión:    0.7
+	Versión:    0.8
 	Autor:		Ramón Román Castro
 	Basado en:	https://gist.github.com/AlexAsplund/28f6c3ef42418902885cde1b83ebc260 (Alex Asplund)
 .LINK
@@ -1007,21 +1007,21 @@ If ("NoClientSite" -in $Tests -Or $Tests -eq "All"){
 	}
 
 	Wait-Job -Job $Jobs -Timeout $Timeout | Out-Null
-	$Logs = Receive-Job -Job $Jobs
+	Receive-Job -Job $Jobs
 	
 	$Jobs.ChildJobs | ForEach-Object{
 		$ChildJob = $_
 		
 		# Data
-		$Data = $Logs | Where-Object { $_.PSComputerName -eq $ChildJob.Location } | Select-Object -ExpandProperty IpAddress | Sort-Object -Unique
-		$ResultCount = ($Data| Measure-Object).Count
+		$Data = $ChildJob.Output | Select-Object -ExpandProperty IpAddress | Sort-Object -Unique
+		$ResultCount = ($Data | Measure-Object).Count
 		
 		# State
 		If ($ChildJob.State -eq 'Running') { Stop-Job $ChildJob; $State = "Timeout" }
-		ElseIf ($ChildJob.State -eq 'Failed') { $State = "Failed" }
-		ElseIf ($ResultCount -eq 0) { $State = "Completed" }
-		Else { $State = "Failed" }
-
+		ElseIf ($ChildJob.State -eq 'Completed') { If ($ResultCount -eq 0) { $State = "Completed" }  Else { $State = "Failed" } }
+		ElseIf ($ChildJob.State -eq 'Failed') { $State = "Failed"; $Data = $ChildJob.JobStateInfo.Reason; }
+		Else { $State = "Failed"; $Data = $ChildJob.JobStateInfo.Reason; }
+		
 		$ResultSplat = @{
 			Source = $_.Location
 			TestName = "NoClientSite"
@@ -1081,7 +1081,7 @@ If ("OrphanGPO" -in $Tests -Or $Tests -eq "All"){
 	ForEach($GPO in $GPOs){
 		Try{
 			[System.Guid]::Parse($GPO) | Out-Null
-			If ((Get-GPO -Guid $GPO) -eq $null) { $OrphanGPOs += $GPO}
+			If ((Get-GPO -Guid $GPO -ErrorAction SilentlyContinue) -eq $null) { $OrphanGPOs += $GPO}
 		}
 		Catch{
 			$OrphanGPOs += $GPO
