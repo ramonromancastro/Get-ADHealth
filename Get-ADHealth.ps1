@@ -34,7 +34,7 @@
 .COMPONENT
 	ActiveDirectory Module
 .NOTES
-	Versión:    0.9
+	Versión:    0.10
 	Autor:		Ramón Román Castro
 	Basado en:	https://gist.github.com/AlexAsplund/28f6c3ef42418902885cde1b83ebc260 (Alex Asplund)
 .LINK
@@ -154,7 +154,7 @@ Class AdhcResult {
 # VARIABLES
 #################################################
 
-$Version = 'v0.6'
+$Version = 'v0.10'
 #$OutputEncoding = [Console]::InputEncoding = [Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
 $StopWatch = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -837,7 +837,7 @@ If ("DuplicateMail" -in $Tests -Or $Tests -eq "All"){
 	}
 
 	# Get all mail's where value -gt 1
-	$DuplicateMail = $MailAttributes | ? {$MailCount["$_"] -gt 1}
+	$DuplicateMail = $MailAttributes | ? {$MailCount["$_"] -gt 1} | Sort-Object -Unique
 
 	$DuplicateCount = ($DuplicateMail | Measure-Object).Count
 	If ($DuplicateCount -eq 0) { $State = "Completed" }
@@ -875,7 +875,7 @@ If ("DuplicateProxyAddress" -in $Tests -Or $Tests -eq "All"){
 	$ProxyAddresses | Foreach {$ProxyAddressCount["$_"]++}
 
 	# Get all ProxyAddresses where value -gt 1
-	$DuplicateProxyAddresses = $ProxyAddresses | ? {$ProxyAddressCount["$_"] -gt 1}
+	$DuplicateProxyAddresses = $ProxyAddresses | ? {$ProxyAddressCount["$_"] -gt 1} | Sort-Object -Unique
 
 	$DuplicateCount = ($DuplicateProxyAddresses | Measure-Object).Count
 	If ($DuplicateCount -eq 0) { $State = "Completed" }
@@ -998,7 +998,7 @@ If ("NoClientSite" -in $Tests -Or $Tests -eq "All"){
 	$Jobs = Invoke-Command -AsJob -ComputerName $DomainControllers -ScriptBlock {
 		Try{
 		$NetLogonLog = Import-Csv "$env:SystemRoot\Debug\netlogon.log" -Delimiter " " -Header Date,Time,Pid,Domain,Message,ComputerName,IpAddress
-		$NoClientSite = $NetlogonLog | Where-Object Message -eq "NO_CLIENT_SITE:" | Select ComputerName,IpAddress
+        $NoClientSite = $NetlogonLog | Where-Object { $_.Message -eq "NO_CLIENT_SITE:" } | Sort-Object ComputerName, IpAddress | Select-Object ComputerName, IpAddress -Unique
 		$NoClientSite
 		}
 		Catch{
@@ -1244,8 +1244,8 @@ If ($HtmlFile){
 	$FilterResults | ForEach-Object{
 		$Results = $_
 		
-		If ($Results.State -eq 'Completed') { $StateColor = "w3-text-green" }
-		ElseIf ($Results.State -eq 'Timeout') { $StateColor = "w3-text-yellow" }
+		If ($Results.State -eq 'Completed') { $StateColor = "w3-text-green"; $Results.Data = 'Ok'; }
+		ElseIf ($Results.State -eq 'Timeout') { $StateColor = "w3-text-yellow"; $Results.Data = 'Unknown';}
 		Else { $StateColor = "w3-text-red" }
 		
 		Add-content $HtmlFile "<tr>" 
@@ -1261,7 +1261,7 @@ If ($HtmlFile){
 		Add-Content $HtmlFile "<td>$([System.Web.HttpUtility]::HtmlEncode($Results.Category))</td>"
 		Add-Content $HtmlFile "<td>$([System.Web.HttpUtility]::HtmlEncode($Results.Description))</td>"
 		If ($Results.Data) {
-			Add-Content $HtmlFile "<td><div id='data_$($Position)' class='data-hide'>$((([System.Web.HttpUtility]::HtmlEncode($Results.Data -join ""`n"")).Trim(""`n"")).Replace(""`n"",""<br>""))</div></td>"
+			Add-Content $HtmlFile "<td><div id='data_$($Position)' class='data-hide'>$([System.Web.HttpUtility]::HtmlEncode(($Results.Data | Out-String).Trim(""`n"")).Replace(""`n"",""<br>""))</div></td>"
 		}
 		Else{
 			Add-Content $HtmlFile "<td></td>"
