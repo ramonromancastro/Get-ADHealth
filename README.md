@@ -1,6 +1,10 @@
 # Get-ADHealth
 Powershell module to check AD health
-
+## Requisitos de instalación
+```
+Add-WindowsFeature GPMC
+Add-WindowsFeature RSAT-AD-PowerShell
+```
 ## Ejemplo de utilización para envío por correo electrónico
 ```
 $HtmlFile = "ad-health.html"
